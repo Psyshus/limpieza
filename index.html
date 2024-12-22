@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ordenador de Datos de Tarjeta</title>
+    <link rel="icon" href="logo.png" type="image/x-icon">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9faf7;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        h1 {
+            color: #ff6e14;
+            text-align: center;
+            margin-top: 20px;
+            font-size: 2rem;
+        }
+        textarea {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            resize: vertical;
+            margin-bottom: 20px;
+            background-color: #fff;
+            transition: border-color 0.3s ease;
+        }
+        textarea:focus {
+            border-color: #ff6e14;
+            outline: none;
+        }
+        button {
+            background-color: #ff6e14;
+            color: #fff;
+            font-size: 16px;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+        button:hover {
+            background-color: #e66010;
+            transform: scale(1.05);
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            flex-grow: 1;
+        }
+        .buttons-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            background-color: #fff;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f9faf7;
+            font-weight: bold;
+            color: #ff6e14;
+        }
+        td {
+            font-size: 16px;
+            color: #555;
+        }
+        .copy-btn {
+            background-color: #33b5e5;
+            font-size: 16px;
+        }
+        .copy-btn:hover {
+            background-color: #0096c7;
+            transform: scale(1.05);
+        }
+        .message {
+            color: #28a745;
+            font-size: 16px;
+            text-align: center;
+            display: none;
+        }
+        footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background-color: #f9faf7;
+            text-align: center;
+            padding: 10px 0;
+            font-size: 0.9rem;
+            color: #777;
+            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+        }
+        footer span {
+            color: #ff6e14;
+            font-weight: bold;
+        }
+        footer .heart {
+            color: #ff6e14;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            h1 {
+                font-size: 1.6rem;
+            }
+            button {
+                width: 100%;
+                padding: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Ordenador de Datos de Transacciones</h1>
+    
+    <!-- Área para ingresar los datos -->
+    <textarea id="dataInput" rows="10" placeholder="Pega los datos desorganizados aquí..."></textarea>
+    
+    <!-- Botones de procesar, copiar y limpiar -->
+    <div class="buttons-container">
+        <button onclick="ordenarDatos()">Procesar Datos</button>
+        <button class="copy-btn" onclick="copiarAlPortapapeles()">Copiar Resultados</button>
+        <button onclick="limpiarDatos()">Limpiar</button>
+    </div>
+
+    <!-- Tabla de resultados -->
+    <div class="table-container">
+        <h2>Resultados</h2>
+        <table id="resultsTable">
+            <thead>
+                <tr>
+                    <th>Texto</th>
+                    <th>Cantidad +</th>
+                    <th>Cantidad -</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Aquí se insertarán las filas -->
+            </tbody>
+        </table>
+    </div>
+
+    <div class="message" id="copiedMessage">¡Datos copiados al portapapeles!</div>
+</div>
+
+<footer>
+    <p>Hecho con <span class="heart">❤</span> por <span>Erick VL</span></p>
+</footer>
+
+<script>
+    function ordenarDatos() {
+        const desorganizado = document.getElementById('dataInput').value;
+        const montoPattern = /([+-]?\$[0-9,.]+)/g;
+        const cashbackPattern = /\$(0.5|1|5)%/g;
+        
+        const lineas = desorganizado.split('\n');
+        const filas = [];
+        let tempTexto = '';
+        let tempMontosPositivos = [];
+        let tempMontosNegativos = [];
+        
+        lineas.forEach(linea => {
+            const montosEncontrados = linea.match(montoPattern);
+            const textoLinea = linea.replace(montoPattern, '').trim();
+
+            if (montosEncontrados) {
+                montosEncontrados.forEach(monto => {
+                    if (cashbackPattern.test(monto)) return;
+                    if (monto.startsWith('-')) {
+                        tempMontosNegativos.push(monto);
+                    } else {
+                        tempMontosPositivos.push(monto);
+                    }
+                });
+            } else {
+                tempTexto += textoLinea + " ";
+            }
+
+            if (textoLinea === "" && montosEncontrados) {
+                const textoCombinado = tempTexto.trim();
+                if (tempMontosNegativos.length === 0) tempMontosNegativos.push('0');
+                if (tempMontosPositivos.length === 0) tempMontosPositivos.push('0');
+                filas.push([textoCombinado, tempMontosPositivos[0], tempMontosNegativos[0]]);
+                tempTexto = '';
+                tempMontosPositivos = [];
+                tempMontosNegativos = [];
+            }
+        });
+
+        if (tempTexto) {
+            const textoCombinado = tempTexto.trim();
+            if (tempMontosNegativos.length === 0) tempMontosNegativos.push('0');
+            if (tempMontosPositivos.length === 0) tempMontosPositivos.push('0');
+            filas.push([textoCombinado, tempMontosPositivos[0], tempMontosNegativos[0]]);
+        }
+
+        const tbody = document.getElementById('resultsTable').getElementsByTagName('tbody')[0];
+        tbody.innerHTML = '';
+        filas.forEach(fila => {
+            const row = tbody.insertRow();
+            row.insertCell(0).textContent = fila[0];
+            row.insertCell(1).textContent = formatMonto(fila[1]);
+            row.insertCell(2).textContent = formatMonto(fila[2]);
+        });
+    }
+
+    function formatMonto(monto) {
+        return parseFloat(monto.replace('$', '').replace(',', '')).toFixed(2);
+    }
+
+    function copiarAlPortapapeles() {
+        const table = document.getElementById('resultsTable');
+        const range = document.createRange();
+        range.selectNode(table);
+        window.getSelection().removeAllRanges();
+        window.getSelection().addRange(range);
+
+        try {
+            document.execCommand('copy');
+            document.getElementById('copiedMessage').style.display = 'block';
+            setTimeout(() => {
+                document.getElementById('copiedMessage').style.display = 'none';
+            }, 2000);
+            alert("¡Datos copiados al portapapeles!");
+        } catch (err) {
+            console.log('No se pudo copiar los datos');
+        }
+
+        window.getSelection().removeAllRanges();
+    }
+
+    function limpiarDatos() {
+        document.getElementById('dataInput').value = '';
+        const tbody = document.getElementById('resultsTable').getElementsByTagName('tbody')[0];
+        tbody.innerHTML = '';
+    }
+</script>
+
+</body>
+</html>
